@@ -12,25 +12,25 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total QR Codes</CardTitle>
+            <CardTitle className="text-sm font-medium">QR-Codes Gesamt</CardTitle>
             <QrCode className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalQRCodes}</div>
             <p className="text-xs text-muted-foreground">
-              Actively managed QR codes
+              Aktiv verwaltete QR-Codes
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Scans</CardTitle>
+            <CardTitle className="text-sm font-medium">Scans Gesamt</CardTitle>
             <BarChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalScans.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              Across all QR codes
+              Über alle QR-Codes
             </p>
           </CardContent>
         </Card>
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
       <div className="grid gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Recent QR Codes</CardTitle>
+            <CardTitle>Letzte QR-Codes</CardTitle>
           </CardHeader>
           <CardContent>
              <div className="space-y-4">
@@ -51,8 +51,8 @@ export default async function DashboardPage() {
                       <p className="text-sm text-muted-foreground truncate max-w-xs">{qr.targetUrl}</p>
                     </div>
                     <div className="text-right">
-                       <p className="font-medium">{qr.scanCount.toLocaleString()} scans</p>
-                       {user && <p className="text-sm text-muted-foreground">by {user.name}</p>}
+                       <p className="font-medium">{qr.scanCount.toLocaleString()} Scans</p>
+                       {user && <p className="text-sm text-muted-foreground">von {user.name}</p>}
                     </div>
                   </div>
                 )

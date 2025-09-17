@@ -17,14 +17,14 @@ export async function login(values: z.infer<typeof LoginSchema>) {
   const validatedFields = LoginSchema.safeParse(values);
 
   if (!validatedFields.success) {
-    return { error: 'Invalid fields!' };
+    return { error: 'Ungültige Felder!' };
   }
 
   const { email, password } = validatedFields.data;
   const user = users.find((u) => u.email === email);
 
   if (!user || user.password !== password) {
-    return { error: 'Invalid email or password' };
+    return { error: 'Ungültige E-Mail oder Passwort' };
   }
 
   await createSession(email);
@@ -41,21 +41,21 @@ export async function updateUserRole(userId: string, role: Role) {
   if (user) {
     user.role = role;
     revalidatePath('/admin/users');
-    return { success: true, message: `User ${user.name}'s role updated to ${role}.` };
+    return { success: true, message: `Die Rolle von Benutzer ${user.name} wurde auf ${role} aktualisiert.` };
   }
-  return { error: 'User not found.' };
+  return { error: 'Benutzer nicht gefunden.' };
 }
 
 const QRCodeSchema = z.object({
   id: z.string().optional(),
-  targetUrl: z.string().url({ message: 'Please enter a valid URL.' }),
+  targetUrl: z.string().url({ message: 'Bitte geben Sie eine gültige URL ein.' }),
   fallbackUrls: z.string().optional(),
 });
 
 export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId: string) {
   const validatedFields = QRCodeSchema.safeParse(values);
   if (!validatedFields.success) {
-    return { error: 'Invalid fields!' };
+    return { error: 'Ungültige Felder!' };
   }
 
   const { id, targetUrl, fallbackUrls } = validatedFields.data;
@@ -82,7 +82,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
     qrCodesData.push(newQRCode);
   }
   revalidatePath('/admin/qr-codes');
-  return { success: true, message: `QR Code ${id ? 'updated' : 'created'} successfully.` };
+  return { success: true, message: `QR-Code wurde erfolgreich ${id ? 'aktualisiert' : 'erstellt'}.` };
 }
 
 export async function deleteQRCode(id: string) {
@@ -90,7 +90,7 @@ export async function deleteQRCode(id: string) {
     if (index !== -1) {
         qrCodesData.splice(index, 1);
         revalidatePath('/admin/qr-codes');
-        return { success: true, message: 'QR Code deleted.' };
+        return { success: true, message: 'QR-Code gelöscht.' };
     }
-    return { error: 'QR Code not found.' };
+    return { error: 'QR-Code nicht gefunden.' };
 }

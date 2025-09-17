@@ -21,8 +21,8 @@ import { login } from '@/lib/actions';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email.' }),
-  password: z.string().min(1, { message: 'Password is required.' }),
+  email: z.string().email({ message: 'Bitte geben Sie eine gültige E-Mail-Adresse ein.' }),
+  password: z.string().min(1, { message: 'Passwort ist erforderlich.' }),
 });
 
 export function LoginForm() {
@@ -45,13 +45,13 @@ export function LoginForm() {
       if (result.error) {
         toast({
           variant: 'destructive',
-          title: 'Login Failed',
+          title: 'Anmeldung fehlgeschlagen',
           description: result.error,
         });
       } else {
         toast({
-          title: 'Login Successful',
-          description: 'Redirecting to your dashboard...',
+          title: 'Anmeldung erfolgreich',
+          description: 'Sie werden zu Ihrem Dashboard weitergeleitet...',
         });
         router.push('/admin');
         router.refresh();
@@ -59,8 +59,8 @@ export function LoginForm() {
     } catch (error) {
        toast({
         variant: 'destructive',
-        title: 'An unexpected error occurred',
-        description: 'Please try again.',
+        title: 'Ein unerwarteter Fehler ist aufgetreten',
+        description: 'Bitte versuchen Sie es erneut.',
       });
     } finally {
       setIsSubmitting(false);
@@ -88,7 +88,7 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Passwort</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
@@ -98,7 +98,7 @@ export function LoginForm() {
         />
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Sign In
+          Anmelden
         </Button>
       </form>
     </Form>

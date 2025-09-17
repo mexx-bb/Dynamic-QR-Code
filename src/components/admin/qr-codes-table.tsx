@@ -50,7 +50,7 @@ type QRCodeWithUser = QRCodeData & { userName: string };
 
 const formSchema = z.object({
   id: z.string().optional(),
-  targetUrl: z.string().url({ message: 'Please enter a valid URL.' }),
+  targetUrl: z.string().url({ message: 'Bitte geben Sie eine gültige URL ein.' }),
   fallbackUrls: z.string().optional(),
 });
 
@@ -101,21 +101,21 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
     setIsSubmitting(true);
     const result = await saveQRCode(values, user.id);
     if (result.success) {
-      toast({ title: 'Success', description: result.message });
+      toast({ title: 'Erfolg', description: result.message });
       setIsDialogOpen(false);
     } else {
-      toast({ variant: 'destructive', title: 'Error', description: result.error });
+      toast({ variant: 'destructive', title: 'Fehler', description: result.error });
     }
     setIsSubmitting(false);
   }
 
   async function handleDelete(id: string) {
-    if (confirm('Are you sure you want to delete this QR code?')) {
+    if (confirm('Sind Sie sicher, dass Sie diesen QR-Code löschen möchten?')) {
       const result = await deleteQRCode(id);
       if (result.success) {
-        toast({ title: 'Success', description: result.message });
+        toast({ title: 'Erfolg', description: result.message });
       } else {
-        toast({ variant: 'destructive', title: 'Error', description: result.error });
+        toast({ variant: 'destructive', title: 'Fehler', description: result.error });
       }
     }
   }
@@ -129,10 +129,10 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
   return (
     <>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">QR Codes</h1>
+        <h1 className="text-3xl font-bold tracking-tight">QR-Codes</h1>
         <Button onClick={() => handleOpenDialog()}>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Create QR Code
+          QR-Code erstellen
         </Button>
       </div>
 
@@ -140,12 +140,12 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Short URL</TableHead>
-              <TableHead>Target URL</TableHead>
+              <TableHead>Kurz-URL</TableHead>
+              <TableHead>Ziel-URL</TableHead>
               <TableHead className="text-center">Scans</TableHead>
-              <TableHead>Created By</TableHead>
+              <TableHead>Erstellt von</TableHead>
               <TableHead>
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">Aktionen</span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -166,22 +166,22 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
+                        <span className="sr-only">Menü öffnen</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleOpenDialog(qr)}>
                         <Edit className="mr-2 h-4 w-4" />
-                        Edit
+                        Bearbeiten
                       </DropdownMenuItem>
                        <DropdownMenuItem onClick={() => handleDownload(qr.slug)}>
                         <Download className="mr-2 h-4 w-4" />
-                        Download QR
+                        QR herunterladen
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(qr.id)}>
                         <Trash className="mr-2 h-4 w-4" />
-                        Delete
+                        Löschen
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -195,9 +195,9 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
-            <DialogTitle>{editingQR ? 'Edit' : 'Create'} QR Code</DialogTitle>
+            <DialogTitle>{editingQR ? 'Bearbeiten' : 'Erstellen'} Sie einen QR-Code</DialogTitle>
             <DialogDescription>
-              {editingQR ? 'Update the details for your QR code.' : 'Fill in the details for your new QR code.'}
+              {editingQR ? 'Aktualisieren Sie die Details für Ihren QR-Code.' : 'Geben Sie die Details für Ihren neuen QR-Code ein.'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -209,7 +209,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                     name="targetUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Target URL</FormLabel>
+                        <FormLabel>Ziel-URL</FormLabel>
                         <FormControl>
                           <Input placeholder="https://example.com/my-link" {...field} />
                         </FormControl>
@@ -222,7 +222,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                     name="fallbackUrls"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fallback URLs (optional)</FormLabel>
+                        <FormLabel>Fallback-URLs (optional)</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="https://fallback1.com, https://fallback2.com"
@@ -230,7 +230,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                           />
                         </FormControl>
                         <p className="text-sm text-muted-foreground">
-                          Comma-separated URLs to use if the target is unavailable.
+                          Durch Kommas getrennte URLs, die verwendet werden sollen, wenn das Ziel nicht verfügbar ist.
                         </p>
                         <FormMessage />
                       </FormItem>
@@ -240,28 +240,28 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
               </Form>
             </div>
             <div className="flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed p-4">
-                <p className="text-sm font-medium">QR Code Preview</p>
+                <p className="text-sm font-medium">QR-Code-Vorschau</p>
                 {editingQR?.slug ? (
                     <Image
                         src={getQrCodeUrl(editingQR.slug)}
-                        alt="QR Code Preview"
+                        alt="QR-Code-Vorschau"
                         width={200}
                         height={200}
                         className="rounded-md"
                     />
                 ) : (
                     <div className="flex h-[200px] w-[200px] items-center justify-center rounded-md bg-muted text-center text-sm text-muted-foreground">
-                        Save to generate a preview
+                        Speichern, um eine Vorschau zu generieren
                     </div>
                 )}
-                 <p className="text-xs text-muted-foreground">Links to /q/{editingQR?.slug || '...'}</p>
+                 <p className="text-xs text-muted-foreground">Verlinkt auf /q/{editingQR?.slug || '...'}</p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Abbrechen</Button>
             <Button onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save changes
+              Änderungen speichern
             </Button>
           </DialogFooter>
         </DialogContent>

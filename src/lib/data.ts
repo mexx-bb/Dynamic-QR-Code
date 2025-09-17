@@ -3,7 +3,7 @@ import type { User, QRCodeData } from '@/types';
 export const users: User[] = [
   {
     id: '1',
-    name: 'Admin User',
+    name: 'Admin-Benutzer',
     email: 'mexx@web.de',
     avatarUrl: 'https://picsum.photos/seed/user1/100/100',
     role: 'admin',
@@ -11,7 +11,7 @@ export const users: User[] = [
   },
   {
     id: '2',
-    name: 'Marketing Manager',
+    name: 'Marketing-Manager',
     email: 'manager@example.com',
     avatarUrl: 'https://picsum.photos/seed/user2/100/100',
     role: 'marketing_manager',
@@ -19,7 +19,7 @@ export const users: User[] = [
   },
   {
     id: '3',
-    name: 'Regular User',
+    name: 'Standardbenutzer',
     email: 'user@example.com',
     avatarUrl: 'https://picsum.photos/seed/user3/100/100',
     role: 'user',

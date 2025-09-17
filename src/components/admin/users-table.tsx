@@ -25,7 +25,7 @@ import type { User, Role } from '@/types';
 const roleMap: Record<Role, { label: string; style: string }> = {
   admin: { label: 'Admin', style: 'bg-primary/80 hover:bg-primary/70' },
   marketing_manager: { label: 'Manager', style: 'bg-yellow-500/80 hover:bg-yellow-500/70' },
-  user: { label: 'User', style: 'bg-green-500/80 hover:bg-green-500/70' },
+  user: { label: 'Benutzer', style: 'bg-green-500/80 hover:bg-green-500/70' },
 };
 
 export function UsersTable({ data }: { data: User[] }) {
@@ -34,24 +34,24 @@ export function UsersTable({ data }: { data: User[] }) {
   const handleRoleChange = async (userId: string, role: Role) => {
     const result = await updateUserRole(userId, role);
     if (result.success) {
-      toast({ title: 'Success', description: result.message });
+      toast({ title: 'Erfolg', description: result.message });
     } else {
-      toast({ variant: 'destructive', title: 'Error', description: result.error });
+      toast({ variant: 'destructive', title: 'Fehler', description: result.error });
     }
   };
 
   return (
     <>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Benutzer</h1>
       </div>
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
+              <TableHead>Benutzer</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>Rolle</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -73,7 +73,7 @@ export function UsersTable({ data }: { data: User[] }) {
                     onValueChange={(value) => handleRoleChange(user.id, value as Role)}
                   >
                     <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Select role" />
+                      <SelectValue placeholder="Rolle auswählen" />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.keys(roleMap).map((roleKey) => (

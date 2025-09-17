@@ -46,8 +46,8 @@ import { redirect } from 'next/navigation';
 
 const navItems: NavItem[] = [
   { href: '/admin', title: 'Dashboard', icon: Home, role: ['admin', 'marketing_manager'] },
-  { href: '/admin/qr-codes', title: 'QR Codes', icon: QrCode, role: ['admin', 'marketing_manager'] },
-  { href: '/admin/users', title: 'Users', icon: Users, role: ['admin'] },
+  { href: '/admin/qr-codes', title: 'QR-Codes', icon: QrCode, role: ['admin', 'marketing_manager'] },
+  { href: '/admin/users', title: 'Benutzer', icon: Users, role: ['admin'] },
 ];
 
 export default async function AdminLayout({
@@ -129,7 +129,7 @@ function UserNav({ user }: { user: User }) {
         <DropdownMenuSeparator />
         <form action={logout}>
           <DropdownMenuItem asChild>
-            <button type="submit" className="w-full">Log out</button>
+            <button type="submit" className="w-full">Abmelden</button>
           </DropdownMenuItem>
         </form>
       </DropdownMenuContent>
