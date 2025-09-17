@@ -1,3 +1,18 @@
+import { LoginForm } from "@/components/auth/login-form";
+import Logo from "@/components/logo";
+
 export default function Home() {
-  return <></>;
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-8">
+      <div className="flex w-full max-w-md flex-col items-center space-y-6">
+        <Logo />
+        <div className="w-full rounded-lg border bg-card p-6 shadow-sm">
+          <LoginForm />
+        </div>
+        <p className="px-8 text-center text-sm text-muted-foreground">
+          Use `admin@example.com` / `password` for admin access.
+        </p>
+      </div>
+    </main>
+  );
 }
