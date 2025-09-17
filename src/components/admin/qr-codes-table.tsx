@@ -112,7 +112,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
   }
 
   async function handleDelete(id: string) {
-    if (confirm('Sind Sie sicher, dass Sie diesen QR-Code löschen möchten?')) {
+    if (confirm('Sind Sie sicher, dass Sie diesen QR-Code archivieren möchten?')) {
       const result = await deleteQRCode(id);
       if (result.success) {
         toast({ title: 'Erfolg', description: result.message });
@@ -185,7 +185,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(qr.id)}>
                         <Trash className="mr-2 h-4 w-4" />
-                        Löschen
+                        Archivieren
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

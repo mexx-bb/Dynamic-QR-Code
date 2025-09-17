@@ -7,6 +7,7 @@ import {
   PanelLeft,
   Settings,
   MoreHorizontal,
+  Archive,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -47,6 +48,7 @@ import { redirect } from 'next/navigation';
 const navItems: NavItem[] = [
   { href: '/admin', title: 'Dashboard', icon: Home, role: ['admin', 'marketing_manager'] },
   { href: '/admin/qr-codes', title: 'QR-Codes', icon: QrCode, role: ['admin', 'marketing_manager'] },
+  { href: '/admin/archiv', title: 'Archiv', icon: Archive, role: ['admin', 'marketing_manager'] },
   { href: '/admin/users', title: 'Benutzer', icon: Users, role: ['admin'] },
 ];
 

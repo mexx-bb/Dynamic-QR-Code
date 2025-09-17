@@ -1,26 +1,24 @@
 import { qrCodes, users } from '@/lib/data';
 import { getSession } from '@/lib/auth';
-import { QRCodesTable } from '@/components/admin/qr-codes-table';
-import type { User } from '@/types';
+import { ArchivedQRCodesTable } from '@/components/admin/archived-qr-codes-table';
 import { redirect } from 'next/navigation';
 
-export default async function QRCodesPage() {
+export default async function ArchivedQRCodesPage() {
   const sessionUser = await getSession();
 
   if (!sessionUser) {
     redirect('/');
   }
   
-  // In a real app, you'd fetch this from a database
-  const activeCodes = qrCodes.filter(qr => qr.status === 'active');
-  const codesWithUsers = activeCodes.map(qr => {
+  const archivedCodes = qrCodes.filter(qr => qr.status === 'archived');
+  const codesWithUsers = archivedCodes.map(qr => {
     const user = users.find(u => u.id === qr.createdBy);
     return { ...qr, userName: user?.name || 'Unknown' };
   });
 
   return (
     <div className="space-y-6">
-      <QRCodesTable data={codesWithUsers} user={sessionUser} />
+      <ArchivedQRCodesTable data={codesWithUsers} />
     </div>
   );
 }

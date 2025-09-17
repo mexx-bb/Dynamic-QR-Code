@@ -86,6 +86,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
       scanCount: 0,
       createdAt: new Date().toISOString(),
       createdBy: creatorId,
+      status: 'active' as const,
     };
     qrCodesData.push(newQRCode);
   }
@@ -94,11 +95,33 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
 }
 
 export async function deleteQRCode(id: string) {
-    const index = qrCodesData.findIndex(qr => qr.id === id);
-    if (index !== -1) {
-        qrCodesData.splice(index, 1);
+    const qrCode = qrCodesData.find(qr => qr.id === id);
+    if (qrCode) {
+        qrCode.status = 'archived';
         revalidatePath('/admin/qr-codes');
-        return { success: true, message: 'QR-Code gelöscht.' };
+        revalidatePath('/admin/archiv');
+        return { success: true, message: 'QR-Code wurde archiviert.' };
     }
     return { error: 'QR-Code nicht gefunden.' };
+}
+
+export async function restoreQRCode(id: string) {
+  const qrCode = qrCodesData.find(qr => qr.id === id);
+  if (qrCode) {
+    qrCode.status = 'active';
+    revalidatePath('/admin/qr-codes');
+    revalidatePath('/admin/archiv');
+    return { success: true, message: 'QR-Code wurde wiederhergestellt.' };
+  }
+  return { error: 'QR-Code nicht gefunden.' };
+}
+
+export async function permanentlyDeleteQRCode(id: string) {
+  const index = qrCodesData.findIndex(qr => qr.id === id && qr.status === 'archived');
+  if (index !== -1) {
+    qrCodesData.splice(index, 1);
+    revalidatePath('/admin/archiv');
+    return { success: true, message: 'QR-Code endgültig gelöscht.' };
+  }
+  return { error: 'Zu löschender QR-Code nicht im Archiv gefunden.' };
 }

@@ -37,6 +37,7 @@ export let qrCodes: QRCodeData[] = [
     scanCount: 125,
     createdAt: '2023-10-01T10:00:00Z',
     createdBy: '2',
+    status: 'active',
   },
   {
     id: '2',
@@ -47,6 +48,7 @@ export let qrCodes: QRCodeData[] = [
     scanCount: 78,
     createdAt: '2023-10-05T14:30:00Z',
     createdBy: '2',
+    status: 'active',
   },
   {
     id: '3',
@@ -57,5 +59,6 @@ export let qrCodes: QRCodeData[] = [
     scanCount: 340,
     createdAt: '2023-10-10T09:00:00Z',
     createdBy: '1',
+    status: 'active',
   },
 ];
