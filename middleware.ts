@@ -20,20 +20,19 @@ export function middleware(request: NextRequest) {
   const user = users.find((u) => u.email === sessionEmail);
 
   if (!user) {
-    // Invalid cookie, clear it and redirect
     const response = NextResponse.redirect(new URL('/', request.url));
     response.cookies.delete(SESSION_COOKIE_NAME);
     return response;
   }
 
-  // If user is logged in and tries to access the login page, redirect to admin
   if (pathname === '/') {
-    return NextResponse.redirect(new URL('/admin', request.url));
+    if (user.role === 'admin' || user.role === 'marketing_manager') {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
   }
 
   if (isAccessingAdmin) {
     if (user.role === 'user') {
-      // Regular users cannot access admin pages
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
   }

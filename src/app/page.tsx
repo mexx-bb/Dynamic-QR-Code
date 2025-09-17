@@ -10,7 +10,7 @@ export default function Home() {
           <LoginForm />
         </div>
         <p className="px-8 text-center text-sm text-muted-foreground">
-          Use `mexx@web.de` / `password` for admin access.
+          Benutze `mexx@web.de` / `password` für Admin-Zugang.
         </p>
       </div>
     </main>
