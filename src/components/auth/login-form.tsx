@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +25,6 @@ const formSchema = z.object({
 });
 
 export function LoginForm() {
-  const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -42,26 +40,26 @@ export function LoginForm() {
     setIsSubmitting(true);
     try {
       const result = await login(values);
-      if (result.error) {
+      if (result?.error) {
         toast({
           variant: 'destructive',
           title: 'Anmeldung fehlgeschlagen',
           description: result.error,
         });
+      }
+      // No need for success handling, the server action will redirect
+    } catch (error: any) {
+      // The redirect will throw an error, which is expected.
+      // We only want to show a toast if it's a *different* error.
+      if (error.message.includes('NEXT_REDIRECT')) {
+        // This is the expected redirect error, do nothing.
       } else {
         toast({
-          title: 'Anmeldung erfolgreich',
-          description: 'Sie werden zu Ihrem Dashboard weitergeleitet...',
+          variant: 'destructive',
+          title: 'Ein unerwarteter Fehler ist aufgetreten',
+          description: error.message || 'Bitte versuchen Sie es erneut.',
         });
-        router.push('/admin');
-        router.refresh();
       }
-    } catch (error) {
-       toast({
-        variant: 'destructive',
-        title: 'Ein unerwarteter Fehler ist aufgetreten',
-        description: 'Bitte versuchen Sie es erneut.',
-      });
     } finally {
       setIsSubmitting(false);
     }

@@ -28,7 +28,12 @@ export async function login(values: z.infer<typeof LoginSchema>) {
   }
 
   await createSession(email);
-  return { success: true };
+  
+  if (user.role === 'admin' || user.role === 'marketing_manager') {
+    redirect('/admin');
+  } else {
+    redirect('/'); // Or a different page for 'user' role if needed
+  }
 }
 
 export async function logout() {
