@@ -7,7 +7,7 @@ export const users: User[] = [
     email: 'mexx@web.de',
     avatarUrl: 'https://picsum.photos/seed/user1/100/100',
     role: 'admin',
-    password: 'password',
+    password: 'qrcoder12345678!',
   },
   {
     id: '2',
