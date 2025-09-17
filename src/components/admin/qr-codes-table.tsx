@@ -29,7 +29,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -51,6 +50,7 @@ type QRCodeWithUser = QRCodeData & { userName: string };
 const formSchema = z.object({
   id: z.string().optional(),
   targetUrl: z.string().url({ message: 'Bitte geben Sie eine gültige URL ein.' }),
+  description: z.string().min(1, { message: 'Beschreibung ist erforderlich.' }),
   fallbackUrls: z.string().optional(),
 });
 
@@ -65,6 +65,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
     defaultValues: {
       id: '',
       targetUrl: '',
+      description: '',
       fallbackUrls: '',
     },
   });
@@ -75,10 +76,11 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
       form.reset({
         id: qr.id,
         targetUrl: qr.targetUrl,
+        description: qr.description,
         fallbackUrls: qr.fallbackUrls.join(', '),
       });
     } else {
-      form.reset({ id: '', targetUrl: '', fallbackUrls: '' });
+      form.reset({ id: '', targetUrl: '', description: '', fallbackUrls: '' });
     }
     setIsDialogOpen(true);
   };
@@ -141,6 +143,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
           <TableHeader>
             <TableRow>
               <TableHead>Kurz-URL</TableHead>
+              <TableHead>Beschreibung</TableHead>
               <TableHead>Ziel-URL</TableHead>
               <TableHead className="text-center">Scans</TableHead>
               <TableHead>Erstellt von</TableHead>
@@ -155,6 +158,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                 <TableCell>
                   <Badge variant="secondary">/q/{qr.slug}</Badge>
                 </TableCell>
+                <TableCell className="max-w-xs truncate font-medium">{qr.description}</TableCell>
                 <TableCell className="max-w-sm truncate">
                   <a href={qr.targetUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
                     {qr.targetUrl}
@@ -212,6 +216,19 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                         <FormLabel>Ziel-URL</FormLabel>
                         <FormControl>
                           <Input placeholder="https://example.com/my-link" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Beschreibung</FormLabel>
+                        <FormControl>
+                          <Input placeholder="z.B. Herbst-Kampagne" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

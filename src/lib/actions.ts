@@ -54,6 +54,7 @@ export async function updateUserRole(userId: string, role: Role) {
 const QRCodeSchema = z.object({
   id: z.string().optional(),
   targetUrl: z.string().url({ message: 'Bitte geben Sie eine gültige URL ein.' }),
+  description: z.string().min(1, { message: 'Beschreibung ist erforderlich.' }),
   fallbackUrls: z.string().optional(),
 });
 
@@ -63,7 +64,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
     return { error: 'Ungültige Felder!' };
   }
 
-  const { id, targetUrl, fallbackUrls } = validatedFields.data;
+  const { id, targetUrl, description, fallbackUrls } = validatedFields.data;
   const fallbackUrlArray = fallbackUrls ? fallbackUrls.split(',').map(s => s.trim()).filter(Boolean) : [];
 
   if (id) {
@@ -71,6 +72,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
     const qrCode = qrCodesData.find(qr => qr.id === id);
     if (qrCode) {
       qrCode.targetUrl = targetUrl;
+      qrCode.description = description;
       qrCode.fallbackUrls = fallbackUrlArray;
     }
   } else {
@@ -79,6 +81,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
       id: (qrCodesData.length + 1).toString(),
       slug: Math.random().toString(36).substring(2, 8),
       targetUrl,
+      description,
       fallbackUrls: fallbackUrlArray,
       scanCount: 0,
       createdAt: new Date().toISOString(),

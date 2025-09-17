@@ -32,6 +32,7 @@ export let qrCodes: QRCodeData[] = [
     id: '1',
     slug: 'promo1',
     targetUrl: 'https://example.com/special-offer',
+    description: 'Sonderangebot für Herbst-Kampagne',
     fallbackUrls: ['https://example.com/offers', 'https://example.com/'],
     scanCount: 125,
     createdAt: '2023-10-01T10:00:00Z',
@@ -41,6 +42,7 @@ export let qrCodes: QRCodeData[] = [
     id: '2',
     slug: 'event-rsvp',
     targetUrl: 'https://example.com/unavailable-event', // This URL will fail
+    description: 'Anmeldung für das jährliche Firmenevent',
     fallbackUrls: ['https://example.com/events/fallback-info', 'https://example.com/events'],
     scanCount: 78,
     createdAt: '2023-10-05T14:30:00Z',
@@ -50,6 +52,7 @@ export let qrCodes: QRCodeData[] = [
     id: '3',
     slug: 'product-launch',
     targetUrl: 'https://example.com/new-product',
+    description: 'Einführung des neuen "Super-Gadgets"',
     fallbackUrls: [],
     scanCount: 340,
     createdAt: '2023-10-10T09:00:00Z',

@@ -15,6 +15,7 @@ export type QRCodeData = {
   id: string;
   slug: string;
   targetUrl: string;
+  description: string;
   fallbackUrls: string[];
   scanCount: number;
   createdAt: string;
