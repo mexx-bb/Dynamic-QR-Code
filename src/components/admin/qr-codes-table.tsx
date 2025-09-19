@@ -1,10 +1,11 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { MoreHorizontal, PlusCircle, Trash, Edit, Download, Loader2, KeyRound, ShieldAlert } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash, Edit, Download, Loader2, KeyRound, ShieldAlert, BarChart2 } from 'lucide-react';
 import Image from 'next/image';
 
 import {
@@ -230,6 +231,12 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                           <DropdownMenuItem asChild>
+                             <Link href={`/admin/qr-codes/${qr.id}/analytics`}>
+                               <BarChart2 className="mr-2 h-4 w-4" />
+                               Analytics
+                             </Link>
+                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleOpenDialog(qr)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Bearbeiten

@@ -1,5 +1,45 @@
 import type { User, QRCodeData } from '@/types';
 
+// Helper function to generate scan history for the last 7 days
+const generateScanHistory = (totalScans: number) => {
+  if (totalScans === 0) return [];
+  
+  const history: { date: string; scans: number }[] = [];
+  let remainingScans = totalScans;
+  const today = new Date();
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    
+    let dailyScans = 0;
+    if (remainingScans > 0) {
+      // On the last day, assign all remaining scans
+      if (i === 0) {
+        dailyScans = remainingScans;
+      } else {
+        // Assign a random portion of the remaining scans, ensuring it's not more than what's left
+        const maxPossible = Math.floor(remainingScans / (i + 1));
+        dailyScans = Math.floor(Math.random() * maxPossible) + 1;
+        remainingScans -= dailyScans;
+      }
+    }
+    
+    history.push({
+      date: date.toISOString().split('T')[0], // YYYY-MM-DD
+      scans: dailyScans,
+    });
+  }
+
+  // If there are still scans left (e.g. if total was very low), add them to the last day
+  if (remainingScans > 0) {
+    history[6].scans += remainingScans;
+  }
+  
+  return history;
+};
+
+
 export const users: User[] = [
   {
     id: '1',
@@ -40,6 +80,7 @@ export let qrCodes: QRCodeData[] = [
     status: 'active',
     password: null,
     scanLimit: null,
+    scanHistory: generateScanHistory(125),
   },
   {
     id: '2',
@@ -53,6 +94,7 @@ export let qrCodes: QRCodeData[] = [
     status: 'active',
     password: '1234',
     scanLimit: null,
+    scanHistory: generateScanHistory(78),
   },
   {
     id: '3',
@@ -66,5 +108,6 @@ export let qrCodes: QRCodeData[] = [
     status: 'active',
     password: null,
     scanLimit: 500,
+    scanHistory: generateScanHistory(340),
   },
 ];

@@ -23,6 +23,7 @@ export type QRCodeData = {
   status: 'active' | 'archived' | 'expired';
   password?: string | null;
   scanLimit?: number | null;
+  scanHistory?: { date: string; scans: number }[];
 };
 
 export type NavItem = {
