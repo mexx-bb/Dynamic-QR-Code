@@ -53,33 +53,51 @@ export async function updateUserRole(userId: string, role: Role) {
 
 const QRCodeSchema = z.object({
   id: z.string().optional(),
+  slug: z.string().min(3, { message: 'Slug muss mindestens 3 Zeichen lang sein.' }).regex(/^[a-zA-Z0-9_-]+$/, { message: 'Slug darf nur Buchstaben, Zahlen, _ und - enthalten.' }),
   targetUrl: z.string().url({ message: 'Bitte geben Sie eine gültige URL ein.' }),
   description: z.string().min(1, { message: 'Beschreibung ist erforderlich.' }),
   fallbackUrls: z.string().optional(),
+  password: z.string().optional().nullable(),
+  scanLimit: z.preprocess(
+    (val) => (val === '' ? null : Number(val)),
+    z.number().int().positive().nullable()
+  ),
 });
 
 export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId: string) {
   const validatedFields = QRCodeSchema.safeParse(values);
   if (!validatedFields.success) {
-    return { error: 'Ungültige Felder!' };
+    // Flatten errors to a simple object
+    const errors = validatedFields.error.flatten().fieldErrors;
+    const firstError = Object.values(errors)[0]?.[0];
+    return { error: firstError || 'Ungültige Felder!' };
   }
 
-  const { id, targetUrl, description, fallbackUrls } = validatedFields.data;
+  const { id, slug, targetUrl, description, fallbackUrls, password, scanLimit } = validatedFields.data;
   const fallbackUrlArray = fallbackUrls ? fallbackUrls.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  // Check for slug uniqueness
+  const existingSlug = qrCodesData.find(qr => qr.slug === slug && qr.id !== id);
+  if (existingSlug) {
+    return { error: 'Dieser Kurzlink (Slug) wird bereits verwendet.' };
+  }
 
   if (id) {
     // Update existing
     const qrCode = qrCodesData.find(qr => qr.id === id);
     if (qrCode) {
       qrCode.targetUrl = targetUrl;
+      qrCode.slug = slug;
       qrCode.description = description;
       qrCode.fallbackUrls = fallbackUrlArray;
+      qrCode.password = password;
+      qrCode.scanLimit = scanLimit;
     }
   } else {
     // Create new
     const newQRCode = {
       id: (qrCodesData.length + 1).toString(),
-      slug: Math.random().toString(36).substring(2, 8),
+      slug: slug,
       targetUrl,
       description,
       fallbackUrls: fallbackUrlArray,
@@ -87,6 +105,8 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
       createdAt: new Date().toISOString(),
       createdBy: creatorId,
       status: 'active' as const,
+      password: password,
+      scanLimit: scanLimit,
     };
     qrCodesData.push(newQRCode);
   }

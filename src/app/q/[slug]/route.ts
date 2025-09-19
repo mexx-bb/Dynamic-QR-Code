@@ -26,8 +26,23 @@ export async function GET(
   const slug = params.slug;
   const qrCode = qrCodes.find((qr) => qr.slug === slug);
 
-  if (!qrCode) {
-    return NextResponse.redirect(new URL('/not-found', request.url));
+  if (!qrCode || qrCode.status !== 'active') {
+    return NextResponse.redirect(new URL('/link-error', request.url));
+  }
+
+  // Handle Scan Limit
+  if (qrCode.scanLimit && qrCode.scanCount >= qrCode.scanLimit) {
+    qrCode.status = 'expired';
+     return NextResponse.redirect(new URL('/link-error', request.url));
+  }
+
+  // Handle Password Protection
+  const password = request.nextUrl.searchParams.get('pin');
+  if (qrCode.password) {
+    if (password !== qrCode.password) {
+      const pinPromptUrl = new URL(`/q/${slug}/auth`, request.url);
+      return NextResponse.redirect(pinPromptUrl);
+    }
   }
 
   // In a real database, this would be an atomic update.

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { MoreHorizontal, PlusCircle, Trash, Edit, Download, Loader2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash, Edit, Download, Loader2, KeyRound, ShieldAlert } from 'lucide-react';
 import Image from 'next/image';
 
 import {
@@ -33,6 +33,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -44,15 +45,23 @@ import { useToast } from '@/hooks/use-toast';
 import { saveQRCode, deleteQRCode } from '@/lib/actions';
 import type { QRCodeData, User } from '@/types';
 import { Badge } from '../ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 type QRCodeWithUser = QRCodeData & { userName: string };
 
 const formSchema = z.object({
   id: z.string().optional(),
+  slug: z.string().min(3, { message: 'Slug muss mindestens 3 Zeichen lang sein.' }).regex(/^[a-zA-Z0-9_-]+$/, { message: 'Slug darf nur Buchstaben, Zahlen, _ und - enthalten.' }),
   targetUrl: z.string().url({ message: 'Bitte geben Sie eine gültige URL ein.' }),
   description: z.string().min(1, { message: 'Beschreibung ist erforderlich.' }),
   fallbackUrls: z.string().optional(),
+  password: z.string().optional().nullable(),
+  scanLimit: z.preprocess(
+    (val) => (val === '' || val === undefined ? null : Number(val)),
+    z.number().int().positive().nullable()
+  ),
 });
+
 
 export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: User }) {
   const { toast } = useToast();
@@ -64,9 +73,12 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: '',
+      slug: Math.random().toString(36).substring(2, 8),
       targetUrl: '',
       description: '',
       fallbackUrls: '',
+      password: '',
+      scanLimit: null,
     },
   });
 
@@ -75,12 +87,23 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
     if (qr) {
       form.reset({
         id: qr.id,
+        slug: qr.slug,
         targetUrl: qr.targetUrl,
         description: qr.description,
         fallbackUrls: qr.fallbackUrls.join(', '),
+        password: qr.password,
+        scanLimit: qr.scanLimit,
       });
     } else {
-      form.reset({ id: '', targetUrl: '', description: '', fallbackUrls: '' });
+      form.reset({ 
+        id: '', 
+        slug: Math.random().toString(36).substring(2, 8),
+        targetUrl: '', 
+        description: '', 
+        fallbackUrls: '',
+        password: '',
+        scanLimit: null,
+      });
     }
     setIsDialogOpen(true);
   };
@@ -122,8 +145,9 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
     }
   }
   
+  const watchedSlug = form.watch('slug');
   const getQrCodeUrl = (slug: string) => {
-    if (typeof window === 'undefined') return '';
+    if (typeof window === 'undefined' || !slug) return '';
     const qrUrl = `${window.location.origin}/q/${slug}`;
     return `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrUrl)}&size=200x200`;
   };
@@ -139,6 +163,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
       </div>
 
       <div className="rounded-lg border bg-card">
+        <TooltipProvider>
         <Table>
           <TableHeader>
             <TableRow>
@@ -156,7 +181,25 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
             {data.map((qr) => (
               <TableRow key={qr.id}>
                 <TableCell>
-                  <Badge variant="secondary">/q/{qr.slug}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">/q/{qr.slug}</Badge>
+                    {qr.password && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                           <KeyRound className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>Passwortgeschützt</TooltipContent>
+                      </Tooltip>
+                    )}
+                    {qr.scanLimit && (
+                       <Tooltip>
+                        <TooltipTrigger>
+                          <ShieldAlert className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>Scan-Limit: {qr.scanCount}/{qr.scanLimit}</TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="max-w-xs truncate font-medium">{qr.description}</TableCell>
                 <TableCell className="max-w-sm truncate">
@@ -194,6 +237,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
             ))}
           </TableBody>
         </Table>
+        </TooltipProvider>
       </div>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -204,63 +248,99 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
               {editingQR ? 'Aktualisieren Sie die Details für Ihren QR-Code.' : 'Geben Sie die Details für Ihren neuen QR-Code ein.'}
             </DialogDescription>
           </DialogHeader>
+          <Form {...form}>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="targetUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ziel-URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://example.com/my-link" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Beschreibung</FormLabel>
-                        <FormControl>
-                          <Input placeholder="z.B. Herbst-Kampagne" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="fallbackUrls"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Fallback-URLs (optional)</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="https://fallback1.com, https://fallback2.com"
-                            {...field}
-                          />
-                        </FormControl>
-                        <p className="text-sm text-muted-foreground">
-                          Durch Kommas getrennte URLs, die verwendet werden sollen, wenn das Ziel nicht verfügbar ist.
-                        </p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </form>
-              </Form>
+            <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="targetUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ziel-URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://example.com/my-link" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="slug"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kurzlink (Slug)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="mein-slug" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Beschreibung</FormLabel>
+                      <FormControl>
+                        <Input placeholder="z.B. Herbst-Kampagne" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Passwort / PIN (optional)</FormLabel>
+                      <FormControl>
+                        <Input type="text" placeholder="z.B. 1234" {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="scanLimit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Scan-Limit (optional)</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="z.B. 100" {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fallbackUrls"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fallback-URLs (optional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="https://fallback1.com, https://fallback2.com"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Durch Kommas getrennte URLs.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
             </div>
             <div className="flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed p-4">
                 <p className="text-sm font-medium">QR-Code-Vorschau</p>
-                {editingQR?.slug ? (
+                {watchedSlug ? (
                     <Image
-                        src={getQrCodeUrl(editingQR.slug)}
+                        src={getQrCodeUrl(watchedSlug)}
                         alt="QR-Code-Vorschau"
                         width={200}
                         height={200}
@@ -268,12 +348,13 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                     />
                 ) : (
                     <div className="flex h-[200px] w-[200px] items-center justify-center rounded-md bg-muted text-center text-sm text-muted-foreground">
-                        Speichern, um eine Vorschau zu generieren
+                        Geben Sie einen Slug ein, um eine Vorschau zu sehen
                     </div>
                 )}
-                 <p className="text-xs text-muted-foreground">Verlinkt auf /q/{editingQR?.slug || '...'}</p>
+                 <p className="text-xs text-muted-foreground">Verlinkt auf /q/{watchedSlug || '...'}</p>
             </div>
           </div>
+          </Form>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Abbrechen</Button>
             <Button onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>

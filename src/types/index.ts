@@ -20,7 +20,9 @@ export type QRCodeData = {
   scanCount: number;
   createdAt: string;
   createdBy: string; // user id
-  status: 'active' | 'archived';
+  status: 'active' | 'archived' | 'expired';
+  password?: string | null;
+  scanLimit?: number | null;
 };
 
 export type NavItem = {
