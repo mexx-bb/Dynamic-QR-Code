@@ -1,10 +1,31 @@
 import { BarChart, QrCode } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { qrCodes, users } from '@/lib/data';
+import { ScanAnalyticsChart } from '@/components/admin/scan-analytics-chart';
+import { subDays, format } from 'date-fns';
+
+// In a real app, this data would come from a database with scan timestamps.
+// For this demo, we'll generate some random data.
+function getScanDataForLast7Days() {
+  const data = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const date = subDays(today, i);
+    // Generate a random number of scans for each day
+    const scans = Math.floor(Math.random() * 200) + 50;
+    data.push({
+      date: format(date, 'MMM d'),
+      scans: scans,
+    });
+  }
+  return data;
+}
+
 
 export default async function DashboardPage() {
   const totalScans = qrCodes.reduce((sum, qr) => sum + qr.scanCount, 0);
   const totalQRCodes = qrCodes.length;
+  const scanData = getScanDataForLast7Days();
 
   return (
     <div className="space-y-6">
@@ -35,7 +56,15 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Scan-Aktivität (Letzte 7 Tage)</CardTitle>
+          </CardHeader>
+          <CardContent>
+             <ScanAnalyticsChart data={scanData} />
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>Letzte QR-Codes</CardTitle>
