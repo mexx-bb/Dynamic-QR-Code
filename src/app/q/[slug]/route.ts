@@ -41,6 +41,9 @@ export async function GET(
   if (qrCode.password) {
     if (password !== qrCode.password) {
       const pinPromptUrl = new URL(`/q/${slug}/auth`, request.url);
+      if (password !== null) { // only add error if a pin was provided
+        pinPromptUrl.searchParams.set('error', 'Die eingegebene PIN ist falsch. Bitte versuchen Sie es erneut.');
+      }
       return NextResponse.redirect(pinPromptUrl);
     }
   }
