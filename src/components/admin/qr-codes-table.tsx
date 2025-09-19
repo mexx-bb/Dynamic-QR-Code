@@ -68,6 +68,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [editingQR, setEditingQR] = React.useState<QRCodeData | null>(null);
+  const [previewUrl, setPreviewUrl] = React.useState('');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -81,6 +82,17 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
       scanLimit: null,
     },
   });
+
+  const watchedSlug = form.watch('slug');
+
+  React.useEffect(() => {
+    if (watchedSlug) {
+      const qrUrl = `${window.location.origin}/q/${watchedSlug}`;
+      setPreviewUrl(`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrUrl)}&size=200x200`);
+    } else {
+      setPreviewUrl('');
+    }
+  }, [watchedSlug]);
 
   const handleOpenDialog = (qr: QRCodeData | null = null) => {
     setEditingQR(qr);
@@ -144,13 +156,6 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
       }
     }
   }
-  
-  const watchedSlug = form.watch('slug');
-  const getQrCodeUrl = (slug: string) => {
-    if (typeof window === 'undefined' || !slug) return '';
-    const qrUrl = `${window.location.origin}/q/${slug}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrUrl)}&size=200x200`;
-  };
 
   return (
     <>
@@ -347,9 +352,9 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed p-4">
                     <p className="text-sm font-medium">QR-Code-Vorschau</p>
-                    {watchedSlug ? (
+                    {previewUrl ? (
                         <Image
-                            src={getQrCodeUrl(watchedSlug)}
+                            src={previewUrl}
                             alt="QR-Code-Vorschau"
                             width={200}
                             height={200}
