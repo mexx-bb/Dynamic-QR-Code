@@ -48,6 +48,7 @@ import type { QRCodeData, User } from '@/types';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { ScrollArea } from '../ui/scroll-area';
 
 type QRCodeWithUser = QRCodeData & { userName: string };
 
@@ -319,7 +320,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
       </div>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[625px]">
+        <DialogContent className="sm:max-w-4xl grid-rows-[auto,1fr,auto]">
           <DialogHeader>
             <DialogTitle>{editingQR ? 'Bearbeiten' : 'Erstellen'} Sie einen QR-Code</DialogTitle>
             <DialogDescription>
@@ -327,9 +328,9 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-6 overflow-hidden">
+                <ScrollArea className="h-[60vh] md:h-auto md:pr-4">
+                 <div className="space-y-4">
                     <FormField
                       control={form.control}
                       name="type"
@@ -423,18 +424,20 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                             />
                         </>
                     ) : (
-                         <>
+                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                <FormField control={form.control} name="vCardData.firstName" render={({ field }) => (<FormItem><FormLabel>Vorname</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                                <FormField control={form.control} name="vCardData.lastName" render={({ field }) => (<FormItem><FormLabel>Nachname</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                             </div>
-                            <FormField control={form.control} name="vCardData.company" render={({ field }) => (<FormItem><FormLabel>Firma (optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={form.control} name="vCardData.title" render={({ field }) => (<FormItem><FormLabel>Titel (optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                             <div className="grid grid-cols-2 gap-4">
+                                <FormField control={form.control} name="vCardData.title" render={({ field }) => (<FormItem><FormLabel>Titel (optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                <FormField control={form.control} name="vCardData.company" render={({ field }) => (<FormItem><FormLabel>Firma (optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                             </div>
                             <FormField control={form.control} name="vCardData.phone" render={({ field }) => (<FormItem><FormLabel>Telefon (optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                             <FormField control={form.control} name="vCardData.email" render={({ field }) => (<FormItem><FormLabel>E-Mail (optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                             <FormField control={form.control} name="vCardData.website" render={({ field }) => (<FormItem><FormLabel>Webseite (optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
                             <FormField control={form.control} name="vCardData.address" render={({ field }) => (<FormItem><FormLabel>Adresse (optional)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
-                         </>
+                         </div>
                     )}
 
                     <FormField
@@ -464,7 +467,8 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                       )}
                     />
                 </div>
-                <div className="flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed p-4">
+              </ScrollArea>
+                <div className="flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed p-4 h-fit sticky top-0">
                     <p className="text-sm font-medium">QR-Code-Vorschau</p>
                     {previewUrl ? (
                         <Image
@@ -481,8 +485,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                     )}
                      <p className="text-xs text-muted-foreground">Verlinkt auf /q/{watchedSlug || '...'}</p>
                 </div>
-              </div>
-               <DialogFooter>
+               <DialogFooter className="md:col-span-2">
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Abbrechen</Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -496,3 +499,5 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
     </>
   );
 }
+
+    
