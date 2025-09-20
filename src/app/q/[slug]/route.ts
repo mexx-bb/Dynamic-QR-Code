@@ -2,8 +2,25 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { qrCodes } from '@/lib/data';
 import { intelligentFallback } from '@/ai/flows/intelligent-fallback';
+import type { VCardData } from '@/types';
 
 export const runtime = 'edge';
+
+function generateVCard(data: VCardData): string {
+    const { firstName, lastName, company, title, phone, email, website, address } = data;
+    let vCardString = "BEGIN:VCARD\n";
+    vCardString += "VERSION:3.0\n";
+    vCardString += `N:${lastName};${firstName}\n`;
+    vCardString += `FN:${firstName} ${lastName}\n`;
+    if (company) vCardString += `ORG:${company}\n`;
+    if (title) vCardString += `TITLE:${title}\n`;
+    if (phone) vCardString += `TEL;TYPE=WORK,VOICE:${phone}\n`;
+    if (email) vCardString += `EMAIL:${email}\n`;
+    if (website) vCardString += `URL:${website}\n`;
+    if (address) vCardString += `ADR;TYPE=WORK:;;${address}\n`;
+    vCardString += "END:VCARD";
+    return vCardString;
+}
 
 async function isUrlAvailable(url: string): Promise<boolean> {
   // Mocking the check for the "unavailable" URL for demonstration
@@ -30,6 +47,19 @@ export async function GET(
     return NextResponse.redirect(new URL('/link-error', request.url));
   }
 
+  // Handle vCard type
+  if (qrCode.type === 'vcard') {
+      const vCardString = generateVCard(qrCode.vCardData);
+      return new NextResponse(vCardString, {
+          status: 200,
+          headers: {
+              'Content-Type': 'text/vcard;charset=utf-8',
+              'Content-Disposition': `attachment; filename="${qrCode.slug}.vcf"`,
+          },
+      });
+  }
+
+  // Handle URL type
   // Handle Scan Limit
   if (qrCode.scanLimit && qrCode.scanCount >= qrCode.scanLimit) {
     qrCode.status = 'expired';

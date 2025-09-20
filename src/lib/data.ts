@@ -70,6 +70,7 @@ export const users: User[] = [
 export let qrCodes: QRCodeData[] = [
   {
     id: '1',
+    type: 'url',
     slug: 'promo1',
     targetUrl: 'https://example.com/special-offer',
     description: 'Sonderangebot für Herbst-Kampagne',
@@ -84,6 +85,7 @@ export let qrCodes: QRCodeData[] = [
   },
   {
     id: '2',
+    type: 'url',
     slug: 'event-rsvp',
     targetUrl: 'https://example.com/unavailable-event', // This URL will fail
     description: 'Anmeldung für das jährliche Firmenevent (Passwort: 1234)',
@@ -98,6 +100,7 @@ export let qrCodes: QRCodeData[] = [
   },
   {
     id: '3',
+    type: 'url',
     slug: 'product-launch',
     targetUrl: 'https://example.com/new-product',
     description: 'Einführung des neuen "Super-Gadgets" (limitiert auf 500 Scans)',
@@ -110,4 +113,23 @@ export let qrCodes: QRCodeData[] = [
     scanLimit: 500,
     scanHistory: generateScanHistory(340),
   },
+  {
+    id: '4',
+    type: 'vcard',
+    slug: 'max-mustermann',
+    description: 'Kontaktkarte von Max Mustermann',
+    vCardData: {
+      firstName: 'Max',
+      lastName: 'Mustermann',
+      company: 'Musterfirma GmbH',
+      title: 'Geschäftsführer',
+      phone: '+49123456789',
+      email: 'max@musterfirma.de',
+      website: 'https://musterfirma.de',
+      address: 'Musterstraße 1, 12345 Musterstadt, Deutschland',
+    },
+    createdAt: '2023-11-01T12:00:00Z',
+    createdBy: '1',
+    status: 'active',
+  }
 ];

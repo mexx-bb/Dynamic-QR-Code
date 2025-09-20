@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 
 import { users, qrCodes as qrCodesData } from '@/lib/data';
 import { createSession, deleteSession } from '@/lib/auth';
-import type { Role } from '@/types';
+import type { Role, QRCodeData } from '@/types';
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -51,18 +51,36 @@ export async function updateUserRole(userId: string, role: Role) {
   return { error: 'Benutzer nicht gefunden.' };
 }
 
-const QRCodeSchema = z.object({
-  id: z.string().optional(),
-  slug: z.string().min(3, { message: 'Slug muss mindestens 3 Zeichen lang sein.' }).regex(/^[a-zA-Z0-9_-]+$/, { message: 'Slug darf nur Buchstaben, Zahlen, _ und - enthalten.' }),
+const urlSchema = z.object({
+  type: z.literal('url'),
   targetUrl: z.string().url({ message: 'Bitte geben Sie eine gültige URL ein.' }),
-  description: z.string().min(1, { message: 'Beschreibung ist erforderlich.' }),
   fallbackUrls: z.string().optional(),
   password: z.string().optional().nullable(),
   scanLimit: z.preprocess(
-    (val) => (val === '' ? null : Number(val)),
+    (val) => (val === '' || val === undefined ? null : Number(val)),
     z.number().int().positive().nullable()
   ),
 });
+
+const vCardSchema = z.object({
+    type: z.literal('vcard'),
+    vCardData: z.object({
+        firstName: z.string().min(1, 'Vorname ist erforderlich'),
+        lastName: z.string().min(1, 'Nachname ist erforderlich'),
+        company: z.string().optional(),
+        title: z.string().optional(),
+        phone: z.string().optional(),
+        email: z.string().email({ message: 'Ungültige E-Mail-Adresse.' }).optional().or(z.literal('')),
+        website: z.string().url({ message: 'Ungültige Website-URL.' }).optional().or(z.literal('')),
+        address: z.string().optional(),
+    }),
+});
+
+const QRCodeSchema = z.object({
+    id: z.string().optional(),
+    slug: z.string().min(3, { message: 'Slug muss mindestens 3 Zeichen lang sein.' }).regex(/^[a-zA-Z0-9_-]+$/, { message: 'Slug darf nur Buchstaben, Zahlen, _ und - enthalten.' }),
+    description: z.string().min(1, { message: 'Beschreibung ist erforderlich.' }),
+}).and(z.discriminatedUnion('type', [urlSchema, vCardSchema]));
 
 export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId: string) {
   const validatedFields = QRCodeSchema.safeParse(values);
@@ -73,8 +91,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
     return { error: firstError || 'Ungültige Felder!' };
   }
 
-  const { id, slug, targetUrl, description, fallbackUrls, password, scanLimit } = validatedFields.data;
-  const fallbackUrlArray = fallbackUrls ? fallbackUrls.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const { id, slug, description } = validatedFields.data;
 
   // Check for slug uniqueness
   const existingSlug = qrCodesData.find(qr => qr.slug === slug && qr.id !== id);
@@ -84,31 +101,60 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
 
   if (id) {
     // Update existing
-    const qrCode = qrCodesData.find(qr => qr.id === id);
-    if (qrCode) {
-      qrCode.targetUrl = targetUrl;
-      qrCode.slug = slug;
-      qrCode.description = description;
-      qrCode.fallbackUrls = fallbackUrlArray;
-      qrCode.password = password;
-      qrCode.scanLimit = scanLimit;
+    const qrCodeIndex = qrCodesData.findIndex(qr => qr.id === id);
+    if (qrCodeIndex !== -1) {
+       const existingQr = qrCodesData[qrCodeIndex];
+       if (validatedFields.data.type === 'url') {
+            qrCodesData[qrCodeIndex] = {
+                ...existingQr,
+                type: 'url',
+                slug,
+                description,
+                targetUrl: validatedFields.data.targetUrl,
+                fallbackUrls: validatedFields.data.fallbackUrls ? validatedFields.data.fallbackUrls.split(',').map(s => s.trim()).filter(Boolean) : [],
+                password: validatedFields.data.password,
+                scanLimit: validatedFields.data.scanLimit,
+            } as QRCodeData;
+       } else {
+            qrCodesData[qrCodeIndex] = {
+                 ...existingQr,
+                type: 'vcard',
+                slug,
+                description,
+                vCardData: validatedFields.data.vCardData,
+            } as QRCodeData
+       }
     }
   } else {
     // Create new
-    const newQRCode = {
-      id: (qrCodesData.length + 1).toString(),
-      slug: slug,
-      targetUrl,
-      description,
-      fallbackUrls: fallbackUrlArray,
-      scanCount: 0,
-      createdAt: new Date().toISOString(),
-      createdBy: creatorId,
-      status: 'active' as const,
-      password: password,
-      scanLimit: scanLimit,
+    const commonData = {
+        id: (qrCodesData.length + 1).toString(),
+        slug,
+        description,
+        createdAt: new Date().toISOString(),
+        createdBy: creatorId,
+        status: 'active' as const,
     };
-    qrCodesData.push(newQRCode);
+    
+    if (validatedFields.data.type === 'url') {
+        const newQRCode: QRCodeData = {
+            ...commonData,
+            type: 'url',
+            targetUrl: validatedFields.data.targetUrl,
+            fallbackUrls: validatedFields.data.fallbackUrls ? validatedFields.data.fallbackUrls.split(',').map(s => s.trim()).filter(Boolean) : [],
+            scanCount: 0,
+            password: validatedFields.data.password,
+            scanLimit: validatedFields.data.scanLimit,
+        };
+        qrCodesData.push(newQRCode);
+    } else {
+         const newQRCode: QRCodeData = {
+            ...commonData,
+            type: 'vcard',
+            vCardData: validatedFields.data.vCardData,
+        };
+        qrCodesData.push(newQRCode);
+    }
   }
   revalidatePath('/admin/qr-codes');
   return { success: true, message: `QR-Code wurde erfolgreich ${id ? 'aktualisiert' : 'erstellt'}.` };

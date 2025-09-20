@@ -11,20 +11,43 @@ export type User = {
   password?: string;
 };
 
-export type QRCodeData = {
+export type VCardData = {
+  firstName: string;
+  lastName: string;
+  company?: string;
+  title?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+};
+
+export type QRCodeDataBase = {
   id: string;
   slug: string;
-  targetUrl: string;
   description: string;
-  fallbackUrls: string[];
-  scanCount: number;
   createdAt: string;
   createdBy: string; // user id
   status: 'active' | 'archived' | 'expired';
+}
+
+export type QRCodeURL = QRCodeDataBase & {
+  type: 'url';
+  targetUrl: string;
+  fallbackUrls: string[];
+  scanCount: number;
   password?: string | null;
   scanLimit?: number | null;
   scanHistory?: { date: string; scans: number }[];
 };
+
+export type QRCodeVCard = QRCodeDataBase & {
+  type: 'vcard';
+  vCardData: VCardData;
+};
+
+export type QRCodeData = QRCodeURL | QRCodeVCard;
+
 
 export type NavItem = {
   href: string;
