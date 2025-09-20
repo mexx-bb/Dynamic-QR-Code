@@ -1,4 +1,4 @@
-import { BarChart, QrCode } from 'lucide-react';
+import { BarChart, QrCode, Contact } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { qrCodes, users } from '@/lib/data';
 import { ScanAnalyticsChart } from '@/components/admin/scan-analytics-chart';
@@ -23,7 +23,7 @@ function getScanDataForLast7Days() {
 
 
 export default async function DashboardPage() {
-  const totalScans = qrCodes.reduce((sum, qr) => sum + qr.scanCount, 0);
+  const totalScans = qrCodes.reduce((sum, qr) => sum + (qr.type === 'url' ? qr.scanCount : 0), 0);
   const totalQRCodes = qrCodes.length;
   const scanData = getScanDataForLast7Days();
 
@@ -51,7 +51,7 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{totalScans.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              Über alle QR-Codes
+              Über alle URL-basierten QR-Codes
             </p>
           </CardContent>
         </Card>
@@ -76,11 +76,22 @@ export default async function DashboardPage() {
                 return (
                   <div key={qr.id} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">/{qr.slug}</p>
-                      <p className="text-sm text-muted-foreground truncate max-w-xs">{qr.targetUrl}</p>
+                      <p className="font-medium">/q/{qr.slug}</p>
+                      {qr.type === 'url' ? (
+                        <p className="text-sm text-muted-foreground truncate max-w-xs">{qr.targetUrl}</p>
+                      ): (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Contact className="h-3 w-3" />
+                          <span>vCard: {qr.vCardData.firstName} {qr.vCardData.lastName}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="text-right">
-                       <p className="font-medium">{qr.scanCount.toLocaleString()} Scans</p>
+                       {qr.type === 'url' ? (
+                          <p className="font-medium">{qr.scanCount.toLocaleString()} Scans</p>
+                       ) : (
+                          <p className="font-medium text-sm text-muted-foreground">Kontakt</p>
+                       )}
                        {user && <p className="text-sm text-muted-foreground">von {user.name}</p>}
                     </div>
                   </div>
@@ -93,3 +104,5 @@ export default async function DashboardPage() {
     </div>
   );
 }
+
+    
