@@ -320,7 +320,7 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
       </div>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-4xl grid-rows-[auto,1fr,auto]">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{editingQR ? 'Bearbeiten' : 'Erstellen'} Sie einen QR-Code</DialogTitle>
             <DialogDescription>
@@ -328,8 +328,8 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-6 overflow-hidden">
-                <ScrollArea className="h-[60vh] md:h-auto md:pr-4">
+            <form id="qr-code-form" onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-6 overflow-hidden flex-1">
+              <ScrollArea className="h-full pr-4 -mr-4">
                  <div className="space-y-4">
                     <FormField
                       control={form.control}
@@ -485,19 +485,17 @@ export function QRCodesTable({ data, user }: { data: QRCodeWithUser[]; user: Use
                     )}
                      <p className="text-xs text-muted-foreground">Verlinkt auf /q/{watchedSlug || '...'}</p>
                 </div>
-               <DialogFooter className="md:col-span-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Abbrechen</Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Änderungen speichern
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Abbrechen</Button>
+            <Button type="submit" form="qr-code-form" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Änderungen speichern
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
   );
 }
-
-    
