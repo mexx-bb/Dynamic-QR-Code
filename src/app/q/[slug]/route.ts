@@ -2,9 +2,25 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getQRCodeBySlug, logScan } from '@/lib/firestore';
 import type { VCardData, QRCodeData, QRCodeURL } from '@/types';
-import bcrypt from 'bcryptjs';
+import { timingSafeEqual } from 'crypto';
 
-export const runtime = 'nodejs'; // Use nodejs runtime for bcrypt and firebase-admin
+export const runtime = 'nodejs'; // Use nodejs runtime for crypto and firebase-admin
+
+async function verifyPin(providedPin: string, storedPinHash: string): Promise<boolean> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(providedPin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const providedPinHash = Buffer.from(hashBuffer).toString('hex');
+    
+    const storedHashBuffer = Buffer.from(storedPinHash, 'hex');
+    const providedHashBuffer = Buffer.from(providedPinHash, 'hex');
+
+    if (storedHashBuffer.length !== providedHashBuffer.length) {
+        return false;
+    }
+
+    return timingSafeEqual(storedHashBuffer, providedHashBuffer);
+}
 
 function generateVCard(data: VCardData): string {
     const { firstName, lastName, company, title, phone, email, website, address } = data;
@@ -37,7 +53,8 @@ export async function GET(
   if (qrCode.type === 'vcard') {
       const vCardString = generateVCard(qrCode.vCardData);
       // Log the scan for vCard as well
-      await logScan(qrCode.id, request.headers.get('user-agent') || '', request.ip);
+      // Not awaiting this intentionally to speed up the response
+      logScan(qrCode.id, request.headers.get('user-agent') || '', request.ip);
       return new NextResponse(vCardString, {
           status: 200,
           headers: {
@@ -57,7 +74,7 @@ export async function GET(
   // Handle Password Protection
   const providedPin = request.nextUrl.searchParams.get('pin');
   if (qrCodeUrl.password) {
-    if (!providedPin || !bcrypt.compareSync(providedPin, qrCodeUrl.password)) {
+    if (!providedPin || !(await verifyPin(providedPin, qrCodeUrl.password))) {
       const pinPromptUrl = new URL(`/q/${slug}/auth`, request.url);
       if (providedPin !== null) { // only add error if a pin was provided
         pinPromptUrl.searchParams.set('error', 'Die eingegebene PIN ist falsch. Bitte versuchen Sie es erneut.');
@@ -67,7 +84,8 @@ export async function GET(
   }
 
   // Log the scan before redirecting
-  await logScan(qrCode.id, request.headers.get('user-agent') || '', request.ip);
+  // Not awaiting this intentionally to speed up the response
+  logScan(qrCode.id, request.headers.get('user-agent') || '', request.ip);
   
   // Finally, redirect to the target URL
   return NextResponse.redirect(qrCodeUrl.targetUrl);

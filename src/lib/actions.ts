@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { timingSafeEqual, createHash } from 'crypto';
 
 import { users, qrCodes as qrCodesData } from '@/lib/data';
 import { createSession, deleteSession } from '@/lib/auth';
@@ -13,6 +14,24 @@ const LoginSchema = z.object({
   password: z.string(),
 });
 
+// Helper function to securely compare passwords
+async function verifyPassword(providedPassword: string, storedPasswordHash: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const providedPasswordBuffer = encoder.encode(providedPassword);
+  
+  const providedPasswordHashBuffer = await crypto.subtle.digest('SHA-256', providedPasswordBuffer);
+  const providedPasswordHash = Buffer.from(providedPasswordHashBuffer).toString('hex');
+  
+  const storedPasswordHashBuffer = Buffer.from(storedPasswordHash, 'hex');
+  const providedHashBuffer = Buffer.from(providedPasswordHash, 'hex');
+
+  if (storedPasswordHashBuffer.length !== providedHashBuffer.length) {
+    return false;
+  }
+  
+  return timingSafeEqual(storedPasswordHashBuffer, providedHashBuffer);
+}
+
 export async function login(values: z.infer<typeof LoginSchema>) {
   const validatedFields = LoginSchema.safeParse(values);
 
@@ -22,9 +41,22 @@ export async function login(values: z.infer<typeof LoginSchema>) {
 
   const { email, password } = validatedFields.data;
   const user = users.find((u) => u.email === email);
-
-  if (!user || user.password !== password) {
+  
+  if (!user || !user.password) {
     return { error: 'Ungültige E-Mail oder Passwort' };
+  }
+
+  // NOTE: In a real app, you would hash the password on signup.
+  // For this demo, we'll hash the known password to compare.
+  const encoder = new TextEncoder();
+  const data = encoder.encode(user.password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const correctPasswordHash = Buffer.from(hashBuffer).toString('hex');
+  
+  const isPasswordCorrect = await verifyPassword(password, correctPasswordHash);
+
+  if (!isPasswordCorrect) {
+     return { error: 'Ungültige E-Mail oder Passwort' };
   }
 
   await createSession(email);
@@ -32,7 +64,7 @@ export async function login(values: z.infer<typeof LoginSchema>) {
   if (user.role === 'admin' || user.role === 'marketing_manager') {
     redirect('/admin');
   } else {
-    redirect('/'); // Or a different page for 'user' role if needed
+    redirect('/');
   }
 }
 
@@ -82,10 +114,16 @@ const QRCodeSchema = z.object({
     description: z.string().min(1, { message: 'Beschreibung ist erforderlich.' }),
 }).and(z.discriminatedUnion('type', [urlSchema, vCardSchema]));
 
+async function hashPin(pin: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Buffer.from(hashBuffer).toString('hex');
+}
+
 export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId: string) {
   const validatedFields = QRCodeSchema.safeParse(values);
   if (!validatedFields.success) {
-    // Flatten errors to a simple object
     const errors = validatedFields.error.flatten().fieldErrors;
     const firstError = Object.values(errors)[0]?.[0];
     return { error: firstError || 'Ungültige Felder!' };
@@ -93,14 +131,17 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
 
   const { id, slug, description } = validatedFields.data;
 
-  // Check for slug uniqueness
   const existingSlug = qrCodesData.find(qr => qr.slug === slug && qr.id !== id);
   if (existingSlug) {
     return { error: 'Dieser Kurzlink (Slug) wird bereits verwendet.' };
   }
 
+  let passwordHash: string | null = null;
+  if (validatedFields.data.type === 'url' && validatedFields.data.password) {
+      passwordHash = await hashPin(validatedFields.data.password);
+  }
+
   if (id) {
-    // Update existing
     const qrCodeIndex = qrCodesData.findIndex(qr => qr.id === id);
     if (qrCodeIndex !== -1) {
        const existingQr = qrCodesData[qrCodeIndex];
@@ -112,7 +153,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
                 description,
                 targetUrl: validatedFields.data.targetUrl,
                 fallbackUrls: validatedFields.data.fallbackUrls ? validatedFields.data.fallbackUrls.split(',').map(s => s.trim()).filter(Boolean) : [],
-                password: validatedFields.data.password,
+                password: passwordHash,
                 scanLimit: validatedFields.data.scanLimit,
             } as QRCodeData;
        } else {
@@ -126,7 +167,6 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
        }
     }
   } else {
-    // Create new
     const commonData = {
         id: (qrCodesData.length + 1).toString(),
         slug,
@@ -143,7 +183,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
             targetUrl: validatedFields.data.targetUrl,
             fallbackUrls: validatedFields.data.fallbackUrls ? validatedFields.data.fallbackUrls.split(',').map(s => s.trim()).filter(Boolean) : [],
             scanCount: 0,
-            password: validatedFields.data.password,
+            password: passwordHash,
             scanLimit: validatedFields.data.scanLimit,
         };
         qrCodesData.push(newQRCode);
