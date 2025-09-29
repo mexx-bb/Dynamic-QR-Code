@@ -6,72 +6,8 @@ import { redirect } from 'next/navigation';
 import { timingSafeEqual, createHash } from 'crypto';
 
 import { users, qrCodes as qrCodesData } from '@/lib/data';
-import { createSession, deleteSession } from '@/lib/auth';
 import type { Role, QRCodeData } from '@/types';
 
-const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
-
-// Helper function to securely compare passwords
-async function verifyPassword(providedPassword: string, storedPasswordHash: string): Promise<boolean> {
-  const encoder = new TextEncoder();
-  const providedPasswordBuffer = encoder.encode(providedPassword);
-  
-  const providedPasswordHashBuffer = await crypto.subtle.digest('SHA-256', providedPasswordBuffer);
-  const providedPasswordHash = Buffer.from(providedPasswordHashBuffer).toString('hex');
-  
-  const storedPasswordHashBuffer = Buffer.from(storedPasswordHash, 'hex');
-  const providedHashBuffer = Buffer.from(providedPasswordHash, 'hex');
-
-  if (storedPasswordHashBuffer.length !== providedHashBuffer.length) {
-    return false;
-  }
-  
-  return timingSafeEqual(storedPasswordHashBuffer, providedHashBuffer);
-}
-
-export async function login(values: z.infer<typeof LoginSchema>) {
-  const validatedFields = LoginSchema.safeParse(values);
-
-  if (!validatedFields.success) {
-    return { error: 'Ungültige Felder!' };
-  }
-
-  const { email, password } = validatedFields.data;
-  const user = users.find((u) => u.email === email);
-  
-  if (!user || !user.password) {
-    return { error: 'Ungültige E-Mail oder Passwort' };
-  }
-
-  // NOTE: In a real app, you would hash the password on signup.
-  // For this demo, we'll hash the known password to compare.
-  const encoder = new TextEncoder();
-  const data = encoder.encode(user.password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const correctPasswordHash = Buffer.from(hashBuffer).toString('hex');
-  
-  const isPasswordCorrect = await verifyPassword(password, correctPasswordHash);
-
-  if (!isPasswordCorrect) {
-     return { error: 'Ungültige E-Mail oder Passwort' };
-  }
-
-  await createSession(email);
-  
-  if (user.role === 'admin' || user.role === 'marketing_manager') {
-    redirect('/admin');
-  } else {
-    redirect('/');
-  }
-}
-
-export async function logout() {
-  await deleteSession();
-  redirect('/');
-}
 
 export async function updateUserRole(userId: string, role: Role) {
   const user = users.find((u) => u.id === userId);

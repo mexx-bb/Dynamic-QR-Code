@@ -3,15 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Link2, BarChart3, Contact, Zap } from 'lucide-react';
 import Logo from '@/components/logo';
-import { LoginForm } from '@/components/auth/login-form';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import Image from 'next/image';
 
 const features = [
@@ -43,23 +34,9 @@ export default function Home() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between">
           <Logo />
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>Anmelden</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-2xl text-center">Anmelden</DialogTitle>
-                <DialogDescription className="text-center">
-                  Greifen Sie auf Ihr Dashboard zu, um Ihre QR-Codes zu verwalten.
-                </DialogDescription>
-              </DialogHeader>
-              <LoginForm />
-               <p className="px-8 text-center text-sm text-muted-foreground">
-                Benutze `mexx@web.de` / `qrcoder12345678!` für Admin-Zugang.
-              </p>
-            </DialogContent>
-          </Dialog>
+          <Button asChild>
+            <Link href="/admin">Anmelden</Link>
+          </Button>
         </div>
       </header>
 
@@ -76,23 +53,9 @@ export default function Home() {
                     Erstellen, verwalten und analysieren Sie QR-Codes, die sich an Ihre Bedürfnisse anpassen. Ändern Sie Ziele, nutzen Sie vCards und erhalten Sie wertvolle Einblicke – alles an einem Ort.
                     </p>
                     <div className="mt-10 flex items-center justify-center gap-x-6">
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button size="lg">Jetzt kostenlos starten</Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                            <DialogTitle className="text-2xl text-center">Anmelden</DialogTitle>
-                            <DialogDescription className="text-center">
-                            Greifen Sie auf Ihr Dashboard zu, um Ihre QR-Codes zu verwalten.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <LoginForm />
-                         <p className="px-8 text-center text-sm text-muted-foreground">
-                            Benutze `mexx@web.de` / `qrcoder12345678!` für Admin-Zugang.
-                        </p>
-                        </DialogContent>
-                    </Dialog>
+                      <Button size="lg" asChild>
+                        <Link href="/admin">Jetzt kostenlos starten</Link>
+                      </Button>
                     </div>
                 </div>
                  <div className="mt-16 flow-root sm:mt-24">

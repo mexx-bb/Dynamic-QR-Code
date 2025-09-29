@@ -47,7 +47,6 @@ export const users: User[] = [
     email: 'mexx@web.de',
     avatarUrl: 'https://picsum.photos/seed/user1/100/100',
     role: 'admin',
-    password: 'qrcoder12345678!',
   },
   {
     id: '2',
@@ -55,7 +54,6 @@ export const users: User[] = [
     email: 'manager@example.com',
     avatarUrl: 'https://picsum.photos/seed/user2/100/100',
     role: 'marketing_manager',
-    password: 'password',
   },
   {
     id: '3',
@@ -63,7 +61,6 @@ export const users: User[] = [
     email: 'user@example.com',
     avatarUrl: 'https://picsum.photos/seed/user3/100/100',
     role: 'user',
-    password: 'password',
   },
 ];
 
