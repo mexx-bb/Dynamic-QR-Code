@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { qrCodes } from '@/lib/data';
-import { intelligentFallback } from '@/ai/flows/intelligent-fallback';
-import type { VCardData } from '@/types';
+import { getQRCodeBySlug, logScan } from '@/lib/firestore';
+import type { VCardData, QRCodeData, QRCodeURL } from '@/types';
+import bcrypt from 'bcryptjs';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs'; // Use nodejs runtime for bcrypt and firebase-admin
 
 function generateVCard(data: VCardData): string {
     const { firstName, lastName, company, title, phone, email, website, address } = data;
@@ -22,26 +22,12 @@ function generateVCard(data: VCardData): string {
     return vCardString;
 }
 
-async function isUrlAvailable(url: string): Promise<boolean> {
-  // Mocking the check for the "unavailable" URL for demonstration
-  if (url.includes('unavailable')) {
-    return false;
-  }
-  try {
-    const response = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(2000) });
-    return response.ok;
-  } catch (error) {
-    console.error(`URL check failed for ${url}:`, error);
-    return false;
-  }
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: { slug: string } }
 ) {
   const slug = params.slug;
-  const qrCode = qrCodes.find((qr) => qr.slug === slug);
+  const qrCode: QRCodeData | null = await getQRCodeBySlug(slug);
 
   if (!qrCode || qrCode.status !== 'active') {
     return NextResponse.redirect(new URL('/link-error', request.url));
@@ -50,6 +36,8 @@ export async function GET(
   // Handle vCard type
   if (qrCode.type === 'vcard') {
       const vCardString = generateVCard(qrCode.vCardData);
+      // Log the scan for vCard as well
+      await logScan(qrCode.id, request.headers.get('user-agent') || '', request.ip);
       return new NextResponse(vCardString, {
           status: 200,
           headers: {
@@ -59,53 +47,28 @@ export async function GET(
       });
   }
 
-  // Handle URL type
+  const qrCodeUrl = qrCode as QRCodeURL;
+
   // Handle Scan Limit
-  if (qrCode.scanLimit && qrCode.scanCount >= qrCode.scanLimit) {
-    qrCode.status = 'expired';
+  if (qrCodeUrl.scanLimit && qrCodeUrl.scanCount >= qrCodeUrl.scanLimit) {
      return NextResponse.redirect(new URL('/link-error', request.url));
   }
 
   // Handle Password Protection
-  const password = request.nextUrl.searchParams.get('pin');
-  if (qrCode.password) {
-    if (password !== qrCode.password) {
+  const providedPin = request.nextUrl.searchParams.get('pin');
+  if (qrCodeUrl.password) {
+    if (!providedPin || !bcrypt.compareSync(providedPin, qrCodeUrl.password)) {
       const pinPromptUrl = new URL(`/q/${slug}/auth`, request.url);
-      if (password !== null) { // only add error if a pin was provided
+      if (providedPin !== null) { // only add error if a pin was provided
         pinPromptUrl.searchParams.set('error', 'Die eingegebene PIN ist falsch. Bitte versuchen Sie es erneut.');
       }
       return NextResponse.redirect(pinPromptUrl);
     }
   }
 
-  // In a real database, this would be an atomic update.
-  qrCode.scanCount += 1;
-
-  const primaryUrlIsUp = await isUrlAvailable(qrCode.targetUrl);
-
-  if (primaryUrlIsUp) {
-    return NextResponse.redirect(qrCode.targetUrl);
-  }
-
-  // Primary URL is down, try to find a fallback
-  if (qrCode.fallbackUrls && qrCode.fallbackUrls.length > 0) {
-    try {
-      const fallback = await intelligentFallback({
-        primaryUrl: qrCode.targetUrl,
-        fallbackUrls: qrCode.fallbackUrls,
-        reason: 'The primary URL was unreachable or returned an error.',
-      });
-      
-      if (fallback.chosenUrl) {
-        return NextResponse.redirect(fallback.chosenUrl);
-      }
-    } catch (aiError) {
-      console.error('Intelligent fallback failed:', aiError);
-      // If AI fails, redirect to the first fallback as a last resort
-      return NextResponse.redirect(qrCode.fallbackUrls[0]);
-    }
-  }
-
-  // If no fallbacks are available or the AI fails without a default, redirect to a generic error page
-  return NextResponse.redirect(new URL('/link-error', request.url));
+  // Log the scan before redirecting
+  await logScan(qrCode.id, request.headers.get('user-agent') || '', request.ip);
+  
+  // Finally, redirect to the target URL
+  return NextResponse.redirect(qrCodeUrl.targetUrl);
 }
