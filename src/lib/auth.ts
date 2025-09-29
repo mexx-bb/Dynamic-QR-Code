@@ -7,26 +7,36 @@ import { getAuth } from 'firebase-admin/auth';
 import { adminApp } from '@/lib/firebase';
 
 export async function getSession(): Promise<User | null> {
-  // This function will need to be updated to validate the Firebase session cookie.
-  // For now, it will return a mock user for demonstration purposes.
-  // In a real app, you'd verify the token and fetch user details.
+  const sessionCookie = cookies().get('session')?.value;
   
-  // Example of what it might look like:
+  if (!sessionCookie) {
+    return null;
+  }
+  
+  // In a real Firebase app, you would verify the session cookie.
+  // For this demo, we're using the email stored in the cookie as a mock session.
+  const user = users.find((u) => u.email === sessionCookie);
+
+  if (!user) {
+    // If user not in mock data, clear the cookie
+    cookies().delete('session');
+    return null;
+  }
+
+  return user;
+  
   /*
+  // REAL FIREBASE IMPLEMENTATION EXAMPLE
   try {
-    const sessionCookie = cookies().get('session')?.value || '';
+    if (!adminApp) {
+        throw new Error('Firebase Admin SDK nicht initialisiert.');
+    }
     const decodedClaims = await getAuth(adminApp).verifySessionCookie(sessionCookie, true);
     const user = users.find((u) => u.email === decodedClaims.email);
     return user || null;
   } catch (error) {
+    console.error('Fehler bei der Sitzungsüberprüfung:', error);
     return null;
   }
   */
-
-  // For now, returning the admin user to allow access to the dashboard.
-  return users.find(u => u.role === 'admin') || null;
-}
-
-export async function deleteSession() {
-  cookies().delete('session');
 }

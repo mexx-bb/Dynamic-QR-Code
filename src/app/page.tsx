@@ -35,7 +35,7 @@ export default function Home() {
         <div className="container flex h-14 items-center justify-between">
           <Logo />
           <Button asChild>
-            <Link href="/admin">Anmelden</Link>
+            <Link href="/login">Anmelden</Link>
           </Button>
         </div>
       </header>
@@ -54,7 +54,7 @@ export default function Home() {
                     </p>
                     <div className="mt-10 flex items-center justify-center gap-x-6">
                       <Button size="lg" asChild>
-                        <Link href="/admin">Jetzt kostenlos starten</Link>
+                        <Link href="/login">Jetzt kostenlos starten</Link>
                       </Button>
                     </div>
                 </div>

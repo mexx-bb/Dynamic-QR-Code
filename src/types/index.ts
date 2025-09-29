@@ -8,7 +8,6 @@ export type User = {
   email: string;
   avatarUrl: string;
   role: Role;
-  password?: string;
 };
 
 export type VCardData = {

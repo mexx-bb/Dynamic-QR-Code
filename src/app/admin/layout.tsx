@@ -60,7 +60,7 @@ export default async function AdminLayout({
   const user = await getSession();
 
   if (!user) {
-    redirect('/');
+    redirect('/login');
   }
 
   const accessibleNavItems = navItems.filter(item => item.role?.includes(user.role));

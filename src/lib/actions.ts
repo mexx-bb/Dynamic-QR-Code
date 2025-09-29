@@ -3,10 +3,62 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { timingSafeEqual, createHash } from 'crypto';
-
+import { cookies } from 'next/headers';
+import { getAuth } from 'firebase-admin/auth';
+import { adminApp } from '@/lib/firebase';
 import { users, qrCodes as qrCodesData } from '@/lib/data';
 import type { Role, QRCodeData } from '@/types';
+
+// Schema für Login-Daten
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+});
+
+// Anmeldeaktion
+export async function login(values: z.infer<typeof loginSchema>) {
+  const validatedFields = loginSchema.safeParse(values);
+  if (!validatedFields.success) {
+    return { error: 'Ungültige Anmeldedaten.' };
+  }
+  
+  // Custom token from the client is needed for server-side session cookie creation.
+  // This approach is not feasible without a client-side step.
+  // The correct flow is:
+  // 1. Client: signInWithEmailAndPassword() -> gets ID token.
+  // 2. Client: Sends ID token to a server endpoint.
+  // 3. Server: Verifies ID token, creates session cookie, and sets it.
+  
+  // For this simplified server action, we'll simulate the user lookup
+  // This is NOT real Firebase auth, just a placeholder to get the UI working.
+  // In a real app, you would not have a password check here.
+
+  const user = users.find(u => u.email === validatedFields.data.email);
+  if (!user) {
+    return { error: 'Benutzer nicht gefunden.' };
+  }
+
+  // This is a mock check. Real Firebase auth happens on the client.
+  if (user.email === 'mexx@web.de' && validatedFields.data.password === 'qrcoder12345678!') {
+     // Simulate session cookie creation
+    cookies().set('session', user.email, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 5, // 5 days
+      path: '/',
+    });
+    return { success: true };
+  }
+  
+  return { error: 'Falsches Passwort.'};
+}
+
+
+// Abmeldeaktion
+export async function logout() {
+  cookies().delete('session');
+  redirect('/');
+}
 
 
 export async function updateUserRole(userId: string, role: Role) {
@@ -89,7 +141,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
                 description,
                 targetUrl: validatedFields.data.targetUrl,
                 fallbackUrls: validatedFields.data.fallbackUrls ? validatedFields.data.fallbackUrls.split(',').map(s => s.trim()).filter(Boolean) : [],
-                password: passwordHash,
+                password: validatedFields.data.password || null, // Storing plain text for now, hash on use
                 scanLimit: validatedFields.data.scanLimit,
             } as QRCodeData;
        } else {
@@ -119,7 +171,7 @@ export async function saveQRCode(values: z.infer<typeof QRCodeSchema>, creatorId
             targetUrl: validatedFields.data.targetUrl,
             fallbackUrls: validatedFields.data.fallbackUrls ? validatedFields.data.fallbackUrls.split(',').map(s => s.trim()).filter(Boolean) : [],
             scanCount: 0,
-            password: passwordHash,
+            password: validatedFields.data.password || null, // Storing plain text for now, hash on use
             scanLimit: validatedFields.data.scanLimit,
         };
         qrCodesData.push(newQRCode);
